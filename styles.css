@@ -30,17 +30,9 @@ canvas#webglCanvas {
 #params2 {
   position: absolute;
   left: 730px;
-  top: 70px;
+  top: 100px;
 }
 
-#input_pow {
-  width: 300px;
-}
-
-#input_real {
-  width: 300px;
-}
-
-#input_imag {
+#input_pow, #input_real, #input_imag {
   width: 300px;
 }

@@ -1,6 +1,11 @@
+/***********************************************
+ * JS + webGL fractal manager project main file
+ ***********************************************/
+
 'use strict';
 
-const vxShaderStr =
+/* Vertex shader GLSL code */
+const vertShader =
 `#version 300 es
 in vec3 aVertexPosition;
 in vec2 aVertexTexCoord;
@@ -10,6 +15,7 @@ uniform mat4 uPMatrix;
 
 out vec2 TexCoord;
 
+/* Main vertex shader function */
 void main(void)
 {
     gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
@@ -17,7 +23,8 @@ void main(void)
 }
 `;
 
-const fsShaderStr =
+/* Fragment shader GLSL code */
+const fragShader =
 `#version 300 es
 precision highp float;
 
@@ -36,6 +43,7 @@ uniform sampler2D uSampler;
 
 out vec4 oColor;
 
+/* Complex number argument evaluation function */
 float Arg(vec2 Z)
 {
   if (Z.x > 0.0)
@@ -52,6 +60,7 @@ float Arg(vec2 Z)
     return 0.0;
 }
 
+/* Complex number power function */
 vec2 Pow(vec2 Z, float power)
 {
   float phi = Arg(Z);
@@ -59,6 +68,7 @@ vec2 Pow(vec2 Z, float power)
   return pow(length(Z), power) * vec2(cos(power * phi), sin(power * phi));
 }
 
+/* Mandelbrot set check function */
 float Mandelbrot(vec2 Z, float power)
 {
   vec2 Z0 = Z;
@@ -69,6 +79,7 @@ float Mandelbrot(vec2 Z, float power)
   return iter / 256.0;
 }
 
+/* Julia set check function */
 float Julia(vec2 Z, float power, vec2 Z1)
 {
   float iter;
@@ -78,6 +89,7 @@ float Julia(vec2 Z, float power, vec2 Z1)
   return iter / 256.0;
 }
 
+/* Main fragment shader function */
 void main(void)
 {
     float Unit = min(FrameW, FrameH) / 2.0,
@@ -91,10 +103,250 @@ void main(void)
       oColor = texture(uSampler, vec2(value, 0.0));
 }`;
 
-let gl;
-function initGL (canvas) {
+/* Fractal representation class */
+class Fractal {
+  constructor () {
+    this.img = new Image();
+    this.img.src = 'default_palette.png';
+
+    this._centerX = 0;
+    this._centerY = 0;
+    this._side = 2.0;
+    this._type = true;
+  }
+
+  /* Fractal center x-coordinate setter */
+  set centerX (value) {
+    this._centerX = value ?? this._centerX;
+  }
+
+  /* Fractal center x-coordinate getter */
+  get centerX () {
+    return this._centerX;
+  }
+
+  /* Fractal center y-coordinate setter */
+  set centerY (value) {
+    this._centerY = value ?? this._centerY;
+  }
+
+  /* Fractal center y-coordinate getter */
+  get centerY () {
+    return this._centerY;
+  }
+
+  /* Fractal side setter */
+  set side (value) {
+    this._side = value ?? this._side;
+  }
+
+  /* Fractal side getter */
+  get side () {
+    return this._side;
+  }
+
+  /* Fractal type setter */
+  set type (value) {
+    this._type = value ?? this._type;
+  }
+
+  /* Fractal type getter */
+  get type () {
+    return this._type;
+  }
+
+  /* Handle loaded fractal texture method */
+  handleTextureLoaded (gl, tex, shaderProgram) {
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.img);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.uniform1i(shaderProgram.Sampler, 0);
+  }
+
+  /* Init fractal texture method */
+  initTexture (gl) {
+    const tex = gl.createTexture();
+
+    this.img.onload = () => {
+      this.handleTextureLoaded(gl, tex, drawer.shaders.shaderProgram);
+    };
+    this.img.src = 'default_palette.png';
+  }
+}
+
+/* Shaders representation class */
+class Shaders {
+  constructor (gl) {
+    this.pMatrix = mat4.create();
+    this.mvMatrix = mat4.create();
+    this.vertexShader = vertShader;
+    this.fragmentShader = fragShader;
+    this.shaderProgram = gl.createProgram();
+  }
+
+  /* Get shader by its type and code utilitary static method */
+  static getShader (gl, type, str) {
+    const shader = gl.createShader(type);
+
+    gl.shaderSource(shader, str);
+    gl.compileShader(shader);
+
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      window.alert(gl.getShaderInfoLog(shader));
+      return null;
+    }
+
+    return shader;
+  }
+
+  /* Init shaders method */
+  init (gl) {
+    const vertexShader = Shaders.getShader(gl, gl.VERTEX_SHADER, this.vertexShader);
+    const fragmentShader = Shaders.getShader(gl, gl.FRAGMENT_SHADER, this.fragmentShader);
+
+    gl.attachShader(this.shaderProgram, vertexShader);
+    gl.attachShader(this.shaderProgram, fragmentShader);
+    gl.linkProgram(this.shaderProgram);
+
+    if (!gl.getProgramParameter(this.shaderProgram, gl.LINK_STATUS)) {
+      window.alert('Shader link error');
+    }
+
+    gl.useProgram(this.shaderProgram);
+
+    this.shaderProgram.vertexPositionAttribute = gl.getAttribLocation(this.shaderProgram, 'aVertexPosition');
+    this.shaderProgram.vertexTexCoordAttribute = gl.getAttribLocation(this.shaderProgram, 'aVertexTexCoord');
+    gl.enableVertexAttribArray(this.shaderProgram.vertexTexCoordAttribute);
+    gl.enableVertexAttribArray(this.shaderProgram.vertexPositionAttribute);
+
+    this.shaderProgram.pMatrixUniform = gl.getUniformLocation(this.shaderProgram, 'uPMatrix');
+    this.shaderProgram.mvMatrixUniform = gl.getUniformLocation(this.shaderProgram, 'uMVMatrix');
+
+    this.shaderProgram.FrameW = gl.getUniformLocation(this.shaderProgram, 'FrameW');
+    this.shaderProgram.FrameH = gl.getUniformLocation(this.shaderProgram, 'FrameH');
+    this.shaderProgram.Side = gl.getUniformLocation(this.shaderProgram, 'Side');
+    this.shaderProgram.Center = gl.getUniformLocation(this.shaderProgram, 'Center');
+
+    this.shaderProgram.Power = gl.getUniformLocation(this.shaderProgram, 'Power');
+    this.shaderProgram.Type = gl.getUniformLocation(this.shaderProgram, 'Type');
+    this.shaderProgram.Jul_Z = gl.getUniformLocation(this.shaderProgram, 'Z');
+
+    this.shaderProgram.Sampler = gl.getUniformLocation(this.shaderProgram, 'uSampler');
+  }
+
+  /* Set default view matrix method */
+  setDefaultView (gl) {
+    mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, this.pMatrix);
+  }
+
+  /* Set default projection matrix method */
+  setDefaultProj (gl) {
+    mat4.identity(this.mvMatrix);
+    mat4.translate(this.mvMatrix, [0.0, 0.0, -1.0]);
+  }
+
+  /* Set shader unifroms method */
+  setUniforms (gl, fractal) {
+    gl.uniformMatrix4fv(this.shaderProgram.pMatrixUniform, false, this.pMatrix);
+    gl.uniformMatrix4fv(this.shaderProgram.mvMatrixUniform, false, this.mvMatrix);
+
+    gl.uniform1f(this.shaderProgram.FrameW, gl.viewportWidth);
+    gl.uniform1f(this.shaderProgram.FrameH, gl.viewportHeight);
+    gl.uniform1f(this.shaderProgram.Side, fractal.side);
+    gl.uniform2f(this.shaderProgram.Center, fractal.centerX, fractal.centerY);
+    gl.uniform1i(this.shaderProgram.Type, fractal.type);
+    gl.uniform1f(this.shaderProgram.Power, document.getElementById('input_pow').value);
+    if (!fractal.type) {
+      gl.uniform2f(this.shaderProgram.Jul_Z, document.getElementById('input_real').value, document.getElementById('input_imag').value);
+    }
+  }
+}
+
+/* Buffers representation class */
+class Buffers {
+  constructor (noOfBuf, data) {
+    this.buffs = new Array(noOfBuf);
+    this.data = data;
+  }
+
+  /* Init buffers method */
+  init (gl) {
+    for (let i = 0; i < this.buffs.length; i++) {
+      this.buffs[i] = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.buffs[i]);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.data[i]), gl.STATIC_DRAW);
+      this.buffs[i].numItems = 4;
+      this.buffs[i].itemSize = this.data[i].length / 4;
+    }
+  }
+}
+
+/* Main drawing context class */
+class Drawer {
+  constructor (canvas) {
+    this.canvas = canvas;
+    this.gl = canvas.getContext('webgl2');
+    this.shaders = new Shaders(this.gl);
+    const bufferData = [
+      [
+        1.0, 1.0, 0.0,
+        -1.0, 1.0, 0.0,
+        1.0, -1.0, 0.0,
+        -1.0, -1.0, 0.0
+      ],
+      [
+        1.0, 1.0,
+        0.0, 1.0,
+        1.0, 0.0,
+        0.0, 0.0
+      ]
+    ];
+    this.buffers = new Buffers(2, bufferData);
+    this.fractal = new Fractal();
+  }
+
+  /* Init drawing context method */
+  init () {
+    initGL(this.canvas, this.gl);
+    initCanvasMouseMethods(this.canvas, this.gl, this.fractal);
+    this.shaders.init(this.gl);
+    this.buffers.init(this.gl);
+    this.fractal.initTexture(this.gl);
+
+    this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    this.gl.enable(this.gl.DEPTH_TEST);
+  }
+
+  /* Draw scene method */
+  draw () {
+    this.gl.viewport(0, 0, this.gl.viewportWidth, this.gl.viewportHeight);
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+
+    this.shaders.setDefaultView(this.gl);
+    this.shaders.setDefaultProj(this.gl);
+    this.shaders.setUniforms(this.gl, this.fractal);
+
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffers.buffs[1]);
+    this.gl.vertexAttribPointer(this.shaders.shaderProgram.vertexTexCoordAttribute, this.buffers.buffs[1].itemSize, this.gl.FLOAT, false, 0, 0);
+    this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffers.buffs[0]);
+    this.gl.vertexAttribPointer(this.shaders.shaderProgram.vertexPositionAttribute, this.buffers.buffs[0].itemSize, this.gl.FLOAT, false, 0, 0);
+
+    this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, this.buffers.buffs[0].numItems);
+  }
+}
+
+/* Main program drawing context */
+let drawer;
+
+/***
+ * Drawing context initialization functions block
+ ***/
+
+/* Main WebGL initialization function */
+function initGL (canvas, gl) {
   try {
-    gl = canvas.getContext('webgl2');
     gl.viewportWidth = canvas.width;
     gl.viewportHeight = canvas.height;
   } catch (e) {
@@ -104,131 +356,15 @@ function initGL (canvas) {
   }
 }
 
-function getShader (gl, type, str) {
-  const shader = gl.createShader(type);
-
-  gl.shaderSource(shader, str);
-  gl.compileShader(shader);
-
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    window.alert(gl.getShaderInfoLog(shader));
-    return null;
-  }
-
-  return shader;
-}
-
-let shaderProgram;
-
-function initShaders () {
-  const fragmentShader = getShader(gl, gl.FRAGMENT_SHADER, fsShaderStr);
-  const vertexShader = getShader(gl, gl.VERTEX_SHADER, vxShaderStr);
-
-  shaderProgram = gl.createProgram();
-  gl.attachShader(shaderProgram, vertexShader);
-  gl.attachShader(shaderProgram, fragmentShader);
-  gl.linkProgram(shaderProgram);
-
-  if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-    window.alert('Shader link error :(');
-  }
-
-  gl.useProgram(shaderProgram);
-
-  shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, 'aVertexPosition');
-  shaderProgram.vertexTexCoordAttribute = gl.getAttribLocation(shaderProgram, 'aVertexTexCoord');
-  gl.enableVertexAttribArray(shaderProgram.vertexTexCoordAttribute);
-  gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
-
-  shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, 'uPMatrix');
-  shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, 'uMVMatrix');
-
-  shaderProgram.FrameW = gl.getUniformLocation(shaderProgram, 'FrameW');
-  shaderProgram.FrameH = gl.getUniformLocation(shaderProgram, 'FrameH');
-  shaderProgram.Side = gl.getUniformLocation(shaderProgram, 'Side');
-  shaderProgram.Center = gl.getUniformLocation(shaderProgram, 'Center');
-
-  shaderProgram.Power = gl.getUniformLocation(shaderProgram, 'Power');
-  shaderProgram.Type = gl.getUniformLocation(shaderProgram, 'Type');
-  shaderProgram.Jul_Z = gl.getUniformLocation(shaderProgram, 'Z');
-
-  shaderProgram.Sampler = gl.getUniformLocation(shaderProgram, 'uSampler');
-}
-
-const mvMatrix = mat4.create();
-const pMatrix = mat4.create();
-
-let CX = 0; let CY = 0;
+/* Start mouse position global values (need for carthographic navigation) */
 let StartX = 0; let StartY = 0;
-let Side = 2.0;
-let type = true;
 
-const mandParams = `
-      <input id="input_pow" type="range" min="-10" max="10" step="0.01" value="2" oninput="updateValues()" />
-      <label for="input_pow" id = "output_pow"> Power: <input id="pow" type="text" value="2" oninput="updateSliders()" /></label>
-`;
-const julParams = `
-      <br />
-      <input id="input_real" type="range" min="-1" max="1" step="0.01" value="0.39" oninput="updateValues()" />
-      <label for="input_real" id = "output_real"> Real part: <input id="real" type="text" value="0.39" oninput="updateSliders()" /></label>
-      <br />
-      <input id="input_imag" type="range" min="-1" max="1" step="0.01" value="-0.16" oninput="updateValues()" />
-      <label for="input_imag" id = "output_imag"> Imaginary part: <input id="imag" type="text" value="-0.16" oninput="updateSliders()" /></label>
-`;
-
-function updateType () {
-  type = !type;
-  Side = 2.0;
-  CX = CY = 0;
-  if (type) {
-    document.getElementById('header').innerHTML = 'Mandelbrot Set';
-    document.getElementById('params').innerHTML = mandParams;
-  } else {
-    document.getElementById('header').innerHTML = 'Julia Set';
-    document.getElementById('params').innerHTML = mandParams + julParams;
-  }
-}
-
-function updateValues () {
-  document.getElementById('pow').value = document.getElementById('input_pow').value;
-  if (!type) {
-    document.getElementById('real').value = document.getElementById('input_real').value;
-    document.getElementById('imag').value = document.getElementById('input_imag').value;
-  }
-}
-
-function updateSliders () {
-  document.getElementById('input_pow').value = document.getElementById('pow').value;
-  if (!type) {
-    document.getElementById('input_real').value = document.getElementById('real').value;
-    document.getElementById('input_imag').value = document.getElementById('imag').value;
-  }
-}
-
-function onMouseMove (event) {
-  const Unit = Math.min(gl.viewportWidth, gl.viewportHeight);
-  const dx = StartX - (event.pageX - gl.viewportWidth / 2) / Unit * Side * 2;
-  StartX = (event.pageX - gl.viewportWidth / 2) / Unit * Side * 2;
-  const dy = StartY - (event.pageY - gl.viewportHeight / 2) / Unit * Side * 2;
-  StartY = (event.pageY - gl.viewportHeight / 2) / Unit * Side * 2;
-
-  CX += dx;
-  CY -= dy;
-}
-
-function onMouseWheel (event) {
-  const delta = (event.deltaY || event.detail || event.wheelDelta) / 125;
-  const Unit = Math.min(gl.viewportWidth, gl.viewportHeight);
-  if (Side > 0.00006 || delta > 0) {
-    Side += Side / 10 * delta;
-  }
-}
-
-function initCanvasMouseMethods (canvas) {
+/* Canvas mouse methods setup function */
+function initCanvasMouseMethods (canvas, gl, fractal) {
   canvas.onmousedown = function (event) {
     const Unit = Math.min(gl.viewportWidth, gl.viewportHeight);
-    StartX = (event.pageX - gl.viewportWidth / 2) / Unit * Side * 2;
-    StartY = (event.pageY - gl.viewportHeight / 2) / Unit * Side * 2;
+    StartX = (event.pageX - gl.viewportWidth / 2) / Unit * fractal.side * 2;
+    StartY = (event.pageY - gl.viewportHeight / 2) / Unit * fractal.side * 2;
 
     document.addEventListener('mousemove', onMouseMove);
   };
@@ -240,114 +376,105 @@ function initCanvasMouseMethods (canvas) {
   canvas.addEventListener('wheel', onMouseWheel);
 }
 
-function setUniforms () {
-  gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
-  gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
+/***
+ * Mouse events handle functions block
+ ***/
 
-  gl.uniform1f(shaderProgram.FrameW, gl.viewportWidth);
-  gl.uniform1f(shaderProgram.FrameH, gl.viewportHeight);
-  gl.uniform1f(shaderProgram.Side, Side);
-  gl.uniform2f(shaderProgram.Center, CX, CY);
-  gl.uniform1i(shaderProgram.Type, type);
-  gl.uniform1f(shaderProgram.Power, document.getElementById('input_pow').value);
-  if (!type) {
-    gl.uniform2f(shaderProgram.Jul_Z, document.getElementById('input_real').value, document.getElementById('input_imag').value);
+/* Mouse move event handle function */
+function onMouseMove (event) {
+  const Unit = Math.min(drawer.gl.viewportWidth, drawer.gl.viewportHeight);
+  const dx = StartX - (event.pageX - drawer.gl.viewportWidth / 2) / Unit * drawer.fractal.side * 2;
+  StartX = (event.pageX - drawer.gl.viewportWidth / 2) / Unit * drawer.fractal.side * 2;
+  const dy = StartY - (event.pageY - drawer.gl.viewportHeight / 2) / Unit * drawer.fractal.side * 2;
+  StartY = (event.pageY - drawer.gl.viewportHeight / 2) / Unit * drawer.fractal.side * 2;
+
+  drawer.fractal.centerX += dx;
+  drawer.fractal.centerY -= dy;
+}
+
+/* Mouse wheel event handle function */
+function onMouseWheel (event) {
+  const delta = (event.deltaY || event.detail || event.wheelDelta) / 125;
+  if (drawer.fractal.side > 0.00006 || delta > 0) {
+    drawer.fractal.side += drawer.fractal.side / 10 * delta;
   }
 }
 
-let squareVertexPositionBuffer;
-let squareVertexTexCoordBuffer;
+/***
+ * Fractal parameters and realtive document elements update functions block
+ ***/
 
-function initBuffers () {
-  squareVertexPositionBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
-  const vertices = [
-    1.0, 1.0, 0.0,
-    -1.0, 1.0, 0.0,
-    1.0, -1.0, 0.0,
-    -1.0, -1.0, 0.0
-  ];
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-  squareVertexPositionBuffer.itemSize = 3;
-  squareVertexPositionBuffer.numItems = 4;
+/* Mandelbrot set parameters input HTML text */
+const powParams = `
+      <input id="input_pow" type="range" min="-10" max="10" step="0.01" value="2" oninput="updateTextAreas()" />
+      <label for="input_pow" id = "output_pow"> Power: <input id="pow" type="text" value="2" oninput="updateSliders()" /></label>
+`;
 
-  squareVertexTexCoordBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexTexCoordBuffer);
-  const texCoords = [
-    1.0, 1.0,
-    0.0, 1.0,
-    1.0, 0.0,
-    0.0, 0.0
-  ];
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(texCoords), gl.STATIC_DRAW);
-  squareVertexTexCoordBuffer.itemSize = 2;
-  squareVertexTexCoordBuffer.numItems = 4;
+/* Julia set parameters input HTML text */
+const julParams = `
+      <br />
+      <input id="input_real" type="range" min="-1" max="1" step="0.01" value="0.39" oninput="updateTextAreas()" />
+      <label for="input_real" id = "output_real"> Real part: <input id="real" type="text" value="0.39" oninput="updateSliders()" /></label>
+      <br />
+      <input id="input_imag" type="range" min="-1" max="1" step="0.01" value="-0.16" oninput="updateTextAreas()" />
+      <label for="input_imag" id = "output_imag"> Imaginary part: <input id="imag" type="text" value="-0.16" oninput="updateSliders()" /></label>
+`;
+
+/* Update fractal type (Mandelbrot or Julia) function */
+function updateType () {
+  drawer.fractal.type = !drawer.fractal.type;
+  drawer.fractal.side = 2.0;
+  drawer.fractal.centerX = drawer.fractal.centerY = 0.0;
+  if (drawer.fractal.type) {
+    document.getElementById('header').innerHTML = 'Mandelbrot Set';
+    document.getElementById('params').innerHTML = powParams;
+  } else {
+    document.getElementById('header').innerHTML = 'Julia Set';
+    document.getElementById('params').innerHTML = powParams + julParams;
+  }
 }
 
-function drawScene () {
-  gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-  mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
-
-  mat4.identity(mvMatrix);
-  mat4.translate(mvMatrix, [0.0, 0.0, -1.0]);
-
-  gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexTexCoordBuffer);
-  gl.vertexAttribPointer(shaderProgram.vertexTexCoordAttribute, squareVertexTexCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
-  gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
-  gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, squareVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-  setUniforms();
-  gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexPositionBuffer.numItems);
+/* Update text-areas values function */
+function updateTextAreas () {
+  document.getElementById('pow').value = document.getElementById('input_pow').value;
+  if (!drawer.fractal.type) {
+    document.getElementById('real').value = document.getElementById('input_real').value;
+    document.getElementById('imag').value = document.getElementById('input_imag').value;
+  }
 }
 
-const img = new Image();
-img.src = 'default_palette.png';
-function handleTextureLoaded (tex) {
-  gl.bindTexture(gl.TEXTURE_2D, tex);
-
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.uniform1i(shaderProgram.Sampler, 0);
+/* Update range sliders values function */
+function updateSliders () {
+  document.getElementById('input_pow').value = document.getElementById('pow').value;
+  if (!drawer.fractal.type) {
+    document.getElementById('input_real').value = document.getElementById('real').value;
+    document.getElementById('input_imag').value = document.getElementById('imag').value;
+  }
 }
 
+/* Update texture image value function */
 function getImage () {
-  const file = document.getElementById('file').files[0];
-  if (file === null || file === undefined) {
-    img.src = 'default_palette.png';
+  const file = document.getElementById('file').files[0] ?? null;
+  if (file === null) {
+    drawer.fractal.img.src = 'default_palette.png';
     return;
   }
-  const tex = gl.createTexture();
-  img.src = window.URL.createObjectURL(file);
-  handleTextureLoaded(tex);
+  const tex = drawer.gl.createTexture();
+  drawer.fractal.img.src = window.URL.createObjectURL(file);
+  drawer.fractal.handleTextureLoaded(drawer.gl, tex, drawer.shaders.shaderProgram);
 }
 
-function loadTexture () {
-  const tex = gl.createTexture();
-
-  img.onload = function () {
-    handleTextureLoaded(tex);
-  };
-  getImage();
-}
-
+/* Every-frame animation response funcion */
 function tick () {
   window.requestAnimationFrame(tick);
-  drawScene();
+  drawer.draw();
 }
 
+/* WebGL start (entry point) function */
 function webGLStart () {
   const canvas = document.getElementById('webglCanvas');
 
-  initGL(canvas);
-  initCanvasMouseMethods(canvas);
-  initShaders();
-  initBuffers();
-  loadTexture();
-
-  gl.clearColor(0.0, 0.0, 0.0, 1.0);
-  gl.enable(gl.DEPTH_TEST);
-
+  drawer = new Drawer(canvas);
+  drawer.init();
   tick();
 }
