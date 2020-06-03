@@ -92,15 +92,15 @@ float Julia(vec2 Z, float power, vec2 Z1)
 /* Main fragment shader function */
 void main(void)
 {
-    float Unit = min(FrameW, FrameH) / 2.0,
-          real = Center.x + ((gl_FragCoord.x - FrameW / 2.0) / Unit) * Side,
-          imag = Center.y + ((gl_FragCoord.y - FrameH / 2.0) / Unit) * Side,
-          value = bool(Type) ? Mandelbrot(vec2(real, imag), Power) : Julia(vec2(real, imag), Power, Z);
+  float Unit = min(FrameW, FrameH) / 2.0,
+        real = Center.x + ((gl_FragCoord.x - FrameW / 2.0) / Unit) * Side,
+        imag = Center.y + ((gl_FragCoord.y - FrameH / 2.0) / Unit) * Side,
+        value = bool(Type) ? Mandelbrot(vec2(real, imag), Power) : Julia(vec2(real, imag), Power, Z);
 
-    if (value == 0.0 || value == 1.0)
-      oColor = vec4(0, 0, 0, 1);
-    else
-      oColor = texture(uSampler, vec2(value, 0.0));
+  if (value == 0.0 || value == 1.0)
+    oColor = vec4(0, 0, 0, 1);
+  else
+    oColor = texture(uSampler, vec2(value, 0.0));
 }`;
 
 /* Fractal representation class */
@@ -109,9 +109,8 @@ class Fractal {
     this.img = new Image();
     this.img.src = 'default_palette.png';
 
-    this._centerX = 0;
-    this._centerY = 0;
-    this._side = 2.0;
+    this._centerX = this._centerY = 0;
+    this._side = 2;
     this._type = true;
   }
 
@@ -373,6 +372,10 @@ function initCanvasMouseMethods (canvas, gl, fractal) {
     document.removeEventListener('mousemove', onMouseMove);
   };
 
+  canvas.onmouseout = function () {
+    document.removeEventListener('mousemove', onMouseMove);
+  };
+
   canvas.addEventListener('wheel', onMouseWheel);
 }
 
@@ -394,8 +397,14 @@ function onMouseMove (event) {
 
 /* Mouse wheel event handle function */
 function onMouseWheel (event) {
+  const Unit = Math.min(drawer.gl.viewportWidth, drawer.gl.viewportHeight);
   const delta = (event.deltaY || event.detail || event.wheelDelta) / 125;
-  if (drawer.fractal.side > 0.00006 || delta > 0) {
+  if ((drawer.fractal.side > 0.00006 || delta > 0) &&
+      (drawer.fractal.side < 10.0000 || delta < 0)) {
+    const mouseX = -(event.offsetX - drawer.gl.viewportWidth / 2) / Unit * 2;
+    const mouseY = ((event.offsetY - drawer.gl.viewportHeight / 2) / Unit * 2);
+    drawer.fractal.centerX = drawer.fractal.centerX + mouseX * drawer.fractal.side / 10 * delta;
+    drawer.fractal.centerY = drawer.fractal.centerY + mouseY * drawer.fractal.side / 10 * delta;
     drawer.fractal.side += drawer.fractal.side / 10 * delta;
   }
 }
