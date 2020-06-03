@@ -406,18 +406,21 @@ function onMouseWheel (event) {
 
 /* Mandelbrot set parameters input HTML text */
 const powParams = `
+      <label for="input_pow" id = "output_pow" style="color:yellow"> Power: </label>
       <input id="input_pow" type="range" min="-10" max="10" step="0.01" value="2" oninput="updateTextAreas()" />
-      <label for="input_pow" id = "output_pow"> Power: <input id="pow" type="text" value="2" oninput="updateSliders()" /></label>
+      <input id="pow" type="text" value="2" oninput="updateSliders()" />
 `;
 
 /* Julia set parameters input HTML text */
 const julParams = `
       <br />
+      <label for="input_real" id = "output_real" style="color:yellow"> Real part: </label>
       <input id="input_real" type="range" min="-1" max="1" step="0.01" value="0.39" oninput="updateTextAreas()" />
-      <label for="input_real" id = "output_real"> Real part: <input id="real" type="text" value="0.39" oninput="updateSliders()" /></label>
+      <input id="real" type="text" value="0.39" oninput="updateSliders()" />
       <br />
+      <label for="input_imag" id = "output_imag" style="color:yellow"> Imaginary part: </label>
       <input id="input_imag" type="range" min="-1" max="1" step="0.01" value="-0.16" oninput="updateTextAreas()" />
-      <label for="input_imag" id = "output_imag"> Imaginary part: <input id="imag" type="text" value="-0.16" oninput="updateSliders()" /></label>
+      <input id="imag" type="text" value="-0.16" oninput="updateSliders()" />
 `;
 
 /* Update fractal type (Mandelbrot or Julia) function */

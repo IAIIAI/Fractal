@@ -1,30 +1,39 @@
 body {
+  background-color: black;
   font-family: consolas;
+  color: white;
   overflow: hidden;
 }
 
+#main {
+  width: 700px;
+}
+
 #header {
+  color: yellow;
   margin: auto;
 }
 
 canvas#webglCanvas {
   border: none;
-  display: block
 }
 
 #params {
   position: absolute;
   left: 730px;
   top: 15px;
-  width: 100%;
 }
 
-#output_pow {
-  margin-left: 79px;
+#input_pow {
+  margin-left: 81px;
 }
 
-#output_real {
-  margin-left: 44px;
+#input_real {
+  margin-left: 46px;
+}
+
+#pow, #real, #imag {
+  width: 35px;
 }
 
 #params2 {
