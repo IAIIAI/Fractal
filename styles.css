@@ -1,0 +1,46 @@
+body {
+  font-family: consolas;
+  overflow: hidden;
+}
+
+#header {
+  margin: auto;
+}
+
+canvas#webglCanvas {
+  border: none;
+  display: block
+}
+
+#params {
+  position: absolute;
+  left: 730px;
+  top: 15px;
+  width: 100%;
+}
+
+#output_pow {
+  margin-left: 79px;
+}
+
+#output_real {
+  margin-left: 44px;
+}
+
+#params2 {
+  position: absolute;
+  left: 730px;
+  top: 70px;
+}
+
+#input_pow {
+  width: 300px;
+}
+
+#input_real {
+  width: 300px;
+}
+
+#input_imag {
+  width: 300px;
+}

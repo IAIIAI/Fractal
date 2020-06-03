@@ -1,0 +1,25 @@
+<html>
+  <head>
+    <title>AD1 Fractals</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+  </head>
+
+  <body onload="webGLStart();">
+    <h3 id="header"> Mandelbrot set </h3>
+    <canvas id="webglCanvas" width="700" height="700"></canvas>
+    <br />
+    <div id="params">
+      <input id="input_pow" type="range" min="-10" max="10" step="0.01" value="2" oninput="updateValues()" />
+      <label for="input_pow" id = "output_pow"> Power: <input id="pow" type="text" value="2" oninput="updateSliders()" /></label>
+    </div>
+    <div id="params2">
+      <p> <b>Fractal type:</b> </p>
+      <p><input name="set" type="radio" value="mand" onchange="updateType()" checked> Mandelbrot </p>
+      <p><input name="set" type="radio" value="jul" onchange="updateType()"> Julia </p>
+      <p> <b>Load palette gradient texture:</b> </p>
+      <input id="file" type="file" accept="image/*" onchange="getImage()" />
+    </div>
+  </body>
+</html>
