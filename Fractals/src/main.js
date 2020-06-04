@@ -25,7 +25,7 @@ class Fractal {
 
   /* Fractal center x-coordinate setter */
   set centerX (value) {
-    this._centerX = value ?? this._centerX;
+    this._centerX = value > -5 ? (value < 5 ? value : 5) : -5;
   }
 
   /* Fractal center x-coordinate getter */
@@ -35,7 +35,7 @@ class Fractal {
 
   /* Fractal center y-coordinate setter */
   set centerY (value) {
-    this._centerY = value ?? this._centerY;
+    this._centerY = value > -5 ? (value < 5 ? value : 5) : -5;
   }
 
   /* Fractal center y-coordinate getter */
