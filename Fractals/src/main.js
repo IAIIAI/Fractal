@@ -2,111 +2,20 @@
  * JS + webGL fractal manager project main file
  ***********************************************/
 
-'use strict';
+/* CSS code import */
+import './styles.css';
 
-/* Vertex shader GLSL code */
-const vertShader =
-`#version 300 es
-in vec3 aVertexPosition;
-in vec2 aVertexTexCoord;
+/* GL matrix library import */
+import { mat4 } from 'gl-matrix/gl-matrix-min.js';
 
-uniform mat4 uMVMatrix;
-uniform mat4 uPMatrix;
-
-out vec2 TexCoord;
-
-/* Main vertex shader function */
-void main(void)
-{
-    gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
-    TexCoord = aVertexTexCoord;
-}
-`;
-
-/* Fragment shader GLSL code */
-const fragShader =
-`#version 300 es
-precision highp float;
-
-in vec2 TexCoord;
-
-uniform float FrameW;
-uniform float FrameH;
-uniform float Side;
-uniform vec2 Center;
-uniform float Power;
-
-uniform int Type;
-uniform vec2 Z;
-
-uniform sampler2D uSampler;
-
-out vec4 oColor;
-
-/* Complex number argument evaluation function */
-float Arg(vec2 Z)
-{
-  if (Z.x > 0.0)
-    return atan(Z.y / Z.x);
-  else if (Z.x < 0.0 && Z.y >= 0.0)
-    return atan(Z.y / Z.x) + acos(-1.0);
-  else if (Z.x < 0.0 && Z.y < 0.0)
-    return atan(Z.y / Z.x) - acos(-1.0);
-  else if (Z.x == 0.0 && Z.y > 0.0)
-    return acos(-1.0) / 2.0;
-  else if (Z.x == 0.0 && Z.y < 0.0)
-    return -acos(-1.0) / 2.0;
-  else
-    return 0.0;
-}
-
-/* Complex number power function */
-vec2 Pow(vec2 Z, float power)
-{
-  float phi = Arg(Z);
-
-  return pow(length(Z), power) * vec2(cos(power * phi), sin(power * phi));
-}
-
-/* Mandelbrot set check function */
-float Mandelbrot(vec2 Z, float power)
-{
-  vec2 Z0 = Z;
-  float iter;
-
-  for (iter = 0.0; iter < 256.0 && length(Z) <= 2.0; iter++)
-    Z = Pow(Z, power) + Z0;
-  return iter / 256.0;
-}
-
-/* Julia set check function */
-float Julia(vec2 Z, float power, vec2 Z1)
-{
-  float iter;
-
-  for (iter = 0.0; iter < 256.0 && length(Z) <= 2.0; iter++)
-    Z = Pow(Z, power) + Z1;
-  return iter / 256.0;
-}
-
-/* Main fragment shader function */
-void main(void)
-{
-  float Unit = min(FrameW, FrameH) / 2.0,
-        real = Center.x + ((gl_FragCoord.x - FrameW / 2.0) / Unit) * Side,
-        imag = Center.y + ((gl_FragCoord.y - FrameH / 2.0) / Unit) * Side,
-        value = bool(Type) ? Mandelbrot(vec2(real, imag), Power) : Julia(vec2(real, imag), Power, Z);
-
-  if (value == 0.0 || value == 1.0)
-    oColor = vec4(0, 0, 0, 1);
-  else
-    oColor = texture(uSampler, vec2(value, 0.0));
-}`;
+/* Shaders code import */
+import vertShader from './main.vert';
+import fragShader from './main.frag';
 
 /* Fractal representation class */
 class Fractal {
   constructor () {
-    this.img = new Image();
+    this.img = new window.Image();
     this.img.src = 'default_palette.png';
 
     this._centerX = this._centerY = 0;
@@ -237,13 +146,13 @@ class Shaders {
 
   /* Set default view matrix method */
   setDefaultView (gl) {
-    mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, this.pMatrix);
+    mat4.perspective(this.pMatrix, 45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0);
   }
 
   /* Set default projection matrix method */
   setDefaultProj (gl) {
     mat4.identity(this.mvMatrix);
-    mat4.translate(this.mvMatrix, [0.0, 0.0, -1.0]);
+    mat4.translate(this.mvMatrix, this.mvMatrix, [0.0, 0.0, -1.0]);
   }
 
   /* Set shader unifroms method */
@@ -256,9 +165,9 @@ class Shaders {
     gl.uniform1f(this.shaderProgram.Side, fractal.side);
     gl.uniform2f(this.shaderProgram.Center, fractal.centerX, fractal.centerY);
     gl.uniform1i(this.shaderProgram.Type, fractal.type);
-    gl.uniform1f(this.shaderProgram.Power, document.getElementById('input_pow').value);
+    gl.uniform1f(this.shaderProgram.Power, document.getElementById('slider_pow').value);
     if (!fractal.type) {
-      gl.uniform2f(this.shaderProgram.Jul_Z, document.getElementById('input_real').value, document.getElementById('input_imag').value);
+      gl.uniform2f(this.shaderProgram.Jul_Z, document.getElementById('slider_real').value, document.getElementById('slider_imag').value);
     }
   }
 }
@@ -415,21 +324,21 @@ function onMouseWheel (event) {
 
 /* Mandelbrot set parameters input HTML text */
 const powParams = `
-      <label for="input_pow" id = "output_pow" style="color:yellow"> Power: </label>
-      <input id="input_pow" type="range" min="-10" max="10" step="0.01" value="2" oninput="updateTextAreas()" />
-      <input id="pow" type="text" value="2" oninput="updateSliders()" />
+      <label for="slider_pow" id="output_pow" style="color:yellow"> Power: </label>
+      <input name="slider" id="slider_pow" type="range" min="-10" max="10" step="0.01" value="2" />
+      <input name="text_area" id="pow" type="text" value="2" />
 `;
 
 /* Julia set parameters input HTML text */
 const julParams = `
       <br />
-      <label for="input_real" id = "output_real" style="color:yellow"> Real part: </label>
-      <input id="input_real" type="range" min="-1" max="1" step="0.01" value="0.39" oninput="updateTextAreas()" />
-      <input id="real" type="text" value="0.39" oninput="updateSliders()" />
+      <label for="slider_real" id="output_real" style="color:yellow"> Real part: </label>
+      <input name="slider" id="slider_real" type="range" min="-1" max="1" step="0.01" value="0.0" />
+      <input name="text_area" id="real" type="text" value="0.0" />
       <br />
-      <label for="input_imag" id = "output_imag" style="color:yellow"> Imaginary part: </label>
-      <input id="input_imag" type="range" min="-1" max="1" step="0.01" value="-0.16" oninput="updateTextAreas()" />
-      <input id="imag" type="text" value="-0.16" oninput="updateSliders()" />
+      <label for="slider_imag" id="output_imag" style="color:yellow"> Imaginary part: </label>
+      <input name="slider" id="slider_imag" type="range" min="-1" max="1" step="0.01" value="-0.67" />
+      <input name="text_area" id="imag" type="text" value="-0.67" />
 `;
 
 /* Update fractal type (Mandelbrot or Julia) function */
@@ -444,23 +353,25 @@ function updateType () {
     document.getElementById('header').innerHTML = 'Julia Set';
     document.getElementById('params').innerHTML = powParams + julParams;
   }
+  document.getElementsByName('slider').forEach((item) => { item.oninput = updateTextAreas; });
+  document.getElementsByName('text_area').forEach((item) => { item.oninput = updateSliders; });
 }
 
 /* Update text-areas values function */
 function updateTextAreas () {
-  document.getElementById('pow').value = document.getElementById('input_pow').value;
+  document.getElementById('pow').value = document.getElementById('slider_pow').value;
   if (!drawer.fractal.type) {
-    document.getElementById('real').value = document.getElementById('input_real').value;
-    document.getElementById('imag').value = document.getElementById('input_imag').value;
+    document.getElementById('real').value = document.getElementById('slider_real').value;
+    document.getElementById('imag').value = document.getElementById('slider_imag').value;
   }
 }
 
 /* Update range sliders values function */
 function updateSliders () {
-  document.getElementById('input_pow').value = document.getElementById('pow').value;
+  document.getElementById('slider_pow').value = document.getElementById('pow').value;
   if (!drawer.fractal.type) {
-    document.getElementById('input_real').value = document.getElementById('real').value;
-    document.getElementById('input_imag').value = document.getElementById('imag').value;
+    document.getElementById('slider_real').value = document.getElementById('real').value;
+    document.getElementById('slider_imag').value = document.getElementById('imag').value;
   }
 }
 
@@ -490,3 +401,10 @@ function webGLStart () {
   drawer.init();
   tick();
 }
+
+/* Add event handle for dynamically updating objects */
+document.addEventListener('DOMContentLoaded', webGLStart);
+document.getElementsByName('type').forEach((item) => { item.onchange = updateType; });
+document.getElementById('file').onchange = getImage;
+document.getElementsByName('slider').forEach((item) => { item.oninput = updateTextAreas; });
+document.getElementsByName('text_area').forEach((item) => { item.oninput = updateSliders; });

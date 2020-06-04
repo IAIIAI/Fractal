@@ -1,16 +1,41 @@
+/***
+ * Main document body style
+ ***/
+
 body {
   background-color: black;
   font-family: consolas;
-  color: white;
+  color: yellow;
   overflow: hidden;
 }
+
+/*** 
+ * Common div's styles
+ ***/
 
 #main {
   width: 700px;
 }
 
+#params {
+  position: absolute;
+  width: 100%;
+  left: 730px;
+  top: 15px;
+}
+
+#params2 {
+  position: absolute;
+  width: 100%;
+  left: 730px;
+  top: 100px;
+}
+
+/***
+ * Main elements styles
+ ***/
+
 #header {
-  color: yellow;
   margin: auto;
 }
 
@@ -18,17 +43,15 @@ canvas#webglCanvas {
   border: none;
 }
 
-#params {
-  position: absolute;
-  left: 730px;
-  top: 15px;
-}
+/***
+ * Input elements styles
+ ***/
 
-#input_pow {
+#slider_pow {
   margin-left: 81px;
 }
 
-#input_real {
+#slider_real {
   margin-left: 46px;
 }
 
@@ -36,12 +59,39 @@ canvas#webglCanvas {
   width: 35px;
 }
 
-#params2 {
-  position: absolute;
-  left: 730px;
-  top: 100px;
+#slider_pow, #slider_real, #slider_imag {
+  width: 300px;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 5px;
+  background: #d3d3d3;
+  outline: none;
+  border-radius: 2px;
+  opacity: 0.7;
 }
 
-#input_pow, #input_real, #input_imag {
-  width: 300px;
+#slider_pow:hover, #slider_real:hover, #slider_imag:hover {
+  opacity: 1;
+}
+
+#slider_pow::-webkit-slider-thumb, #slider_real::-webkit-slider-thumb, #slider_imag::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 15px;
+  background: yellow;
+  cursor: pointer;
+}
+
+#slider_pow::-moz-range-thumb, #slider_real::-moz-range-thumb, #slider_imag::-moz-range-thumb {
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 15px;
+  background: yellow;
+  cursor: pointer;
+}
+
+[name="type"], #file {
+  cursor: pointer;
 }
