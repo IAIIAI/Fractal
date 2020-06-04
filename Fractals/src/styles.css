@@ -28,7 +28,7 @@ body {
   position: absolute;
   width: 100%;
   left: 730px;
-  top: 100px;
+  top: 80px;
 }
 
 /***
@@ -37,6 +37,7 @@ body {
 
 #header {
   margin: auto;
+  color: orange;
 }
 
 canvas#webglCanvas {
@@ -92,6 +93,18 @@ canvas#webglCanvas {
   cursor: pointer;
 }
 
+#trace {
+  cursor: pointer;
+}
+
 [name="type"], #file {
   cursor: pointer;
+}
+
+/***
+ * Output elements styles
+ ***/
+
+#output_pow, #output_real, #output_imag {
+  color: orange;
 }

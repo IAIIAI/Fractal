@@ -324,7 +324,7 @@ function onMouseWheel (event) {
 
 /* Mandelbrot set parameters input HTML text */
 const powParams = `
-      <label for="slider_pow" id="output_pow" style="color:yellow"> Power: </label>
+      <label for="slider_pow" id="output_pow"> Power: </label>
       <input name="slider" id="slider_pow" type="range" min="-10" max="10" step="0.01" value="2" />
       <input name="text_area" id="pow" type="text" value="2" />
 `;
@@ -332,11 +332,11 @@ const powParams = `
 /* Julia set parameters input HTML text */
 const julParams = `
       <br />
-      <label for="slider_real" id="output_real" style="color:yellow"> Real part: </label>
+      <label for="slider_real" id="output_real"> Real part: </label>
       <input name="slider" id="slider_real" type="range" min="-1" max="1" step="0.01" value="0.0" />
       <input name="text_area" id="real" type="text" value="0.0" />
       <br />
-      <label for="slider_imag" id="output_imag" style="color:yellow"> Imaginary part: </label>
+      <label for="slider_imag" id="output_imag"> Imaginary part: </label>
       <input name="slider" id="slider_imag" type="range" min="-1" max="1" step="0.01" value="-0.67" />
       <input name="text_area" id="imag" type="text" value="-0.67" />
 `;
