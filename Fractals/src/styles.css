@@ -1,0 +1,110 @@
+/***
+ * Main document body style
+ ***/
+
+body {
+  background-color: black;
+  font-family: consolas;
+  color: yellow;
+  overflow: hidden;
+}
+
+/*** 
+ * Common div's styles
+ ***/
+
+#main {
+  width: 700px;
+}
+
+#params {
+  position: absolute;
+  width: 100%;
+  left: 730px;
+  top: 15px;
+}
+
+#params2 {
+  position: absolute;
+  width: 100%;
+  left: 730px;
+  top: 80px;
+}
+
+/***
+ * Main elements styles
+ ***/
+
+#header {
+  margin: auto;
+  color: orange;
+}
+
+canvas#webglCanvas {
+  border: none;
+}
+
+/***
+ * Input elements styles
+ ***/
+
+#slider_pow {
+  margin-left: 81px;
+}
+
+#slider_real {
+  margin-left: 46px;
+}
+
+#pow, #real, #imag {
+  width: 35px;
+}
+
+#slider_pow, #slider_real, #slider_imag {
+  width: 300px;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 5px;
+  background: #d3d3d3;
+  outline: none;
+  border-radius: 2px;
+  opacity: 0.7;
+}
+
+#slider_pow:hover, #slider_real:hover, #slider_imag:hover {
+  opacity: 1;
+}
+
+#slider_pow::-webkit-slider-thumb, #slider_real::-webkit-slider-thumb, #slider_imag::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 15px;
+  background: yellow;
+  cursor: pointer;
+}
+
+#slider_pow::-moz-range-thumb, #slider_real::-moz-range-thumb, #slider_imag::-moz-range-thumb {
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 15px;
+  background: yellow;
+  cursor: pointer;
+}
+
+#trace {
+  cursor: pointer;
+}
+
+[name="type"], #file {
+  cursor: pointer;
+}
+
+/***
+ * Output elements styles
+ ***/
+
+#output_pow, #output_real, #output_imag {
+  color: orange;
+}
