@@ -31,27 +31,17 @@ body {
   top: 80px;
 }
 
-#github {
-  position: absolute;
-  width: 100%;
-  left: 730px;
-  top: 240px;
-}
-
 /***
  * Main elements styles
  ***/
 
 #header {
   margin: auto;
+  color: orange;
 }
 
 canvas#webglCanvas {
   border: none;
-}
-
-.orange {
-  color: orange;
 }
 
 /***
@@ -109,4 +99,12 @@ canvas#webglCanvas {
 
 [name="type"], #file {
   cursor: pointer;
+}
+
+/***
+ * Output elements styles
+ ***/
+
+#output_pow, #output_real, #output_imag {
+  color: orange;
 }
