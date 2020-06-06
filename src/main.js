@@ -15,6 +15,9 @@ import fragShader from './main.frag';
 /* Git last commit hash import */
 import hash from '../hash.txt';
 
+/* Webpack build date import */
+import date from '../version.txt';
+
 /* Fractal representation class */
 class Fractal {
   constructor () {
@@ -413,3 +416,4 @@ document.getElementsByName('slider').forEach((item) => { item.oninput = updateTe
 document.getElementsByName('text_area').forEach((item) => { item.oninput = updateSliders; });
 
 document.getElementById('hash').innerHTML = 'Last git commit hash: ' + hash;
+document.getElementById('date').innerHTML = 'Wabpack build date: ' + JSON.parse(date).date;

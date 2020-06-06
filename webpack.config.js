@@ -1,5 +1,6 @@
 const HtmlWebPackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const VersionFile = require('webpack-version-file');
 const path = require('path');
 
 module.exports = {
@@ -20,7 +21,7 @@ module.exports = {
         }
       },
       {
-        test: /\.(glsl|vert|frag)$/,
+        test: /\.(glsl|vert|frag|txt)$/,
         use: {
           loader: 'raw-loader'
         }
@@ -28,8 +29,8 @@ module.exports = {
       {
         test: /\.css$/,
         use: [
-            MiniCssExtractPlugin.loader,
-            'css-loader'
+          MiniCssExtractPlugin.loader,
+          'css-loader'
         ]
       },
       {
@@ -48,6 +49,15 @@ module.exports = {
       filename: './index.html',
       favicon: './favicon.ico'
     }),
-    new MiniCssExtractPlugin()
+    new MiniCssExtractPlugin(),
+    new VersionFile({
+      output: './version.txt',
+      data: {
+        date: (new Date()).toDateString() + ' ' + [(((new Date()).getHours() < 10) ? '0' : '') + (new Date()).getHours().toString(),
+                                                   (((new Date()).getMinutes() < 10) ? '0' : '') + (new Date()).getMinutes().toString(),
+                                                   (((new Date()).getSeconds() < 10) ? '0' : '') + (new Date()).getSeconds().toString()].join(':')
+      },
+      template: './version.ejs'
+    })
   ]
 };

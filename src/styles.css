@@ -44,11 +44,14 @@ body {
 
 #header {
   margin: auto;
-  color: orange;
 }
 
 canvas#webglCanvas {
   border: none;
+}
+
+.orange {
+  color: orange;
 }
 
 /***
