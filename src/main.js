@@ -416,4 +416,4 @@ document.getElementsByName('slider').forEach((item) => { item.oninput = updateTe
 document.getElementsByName('text_area').forEach((item) => { item.oninput = updateSliders; });
 
 document.getElementById('hash').innerHTML = 'Last git commit hash: ' + hash;
-document.getElementById('date').innerHTML = 'Wabpack build date: ' + JSON.parse(date).date;
+document.getElementById('date').innerHTML = JSON.parse(date).date;
