@@ -118,3 +118,7 @@ canvas#webglCanvas {
 #output_pow, #output_real, #output_imag {
   color: orange;
 }
+
+#date {
+  color: yellow;
+}
