@@ -31,6 +31,13 @@ body {
   top: 80px;
 }
 
+#github {
+  position: absolute;
+  width: 100%;
+  left: 730px;
+  top: 240px;
+}
+
 /***
  * Main elements styles
  ***/

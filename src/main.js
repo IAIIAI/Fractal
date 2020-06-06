@@ -12,6 +12,9 @@ import { mat4 } from 'gl-matrix/gl-matrix-min.js';
 import vertShader from './main.vert';
 import fragShader from './main.frag';
 
+/* Git last commit hash import */
+import hash from '../hash.txt';
+
 /* Fractal representation class */
 class Fractal {
   constructor () {
@@ -408,3 +411,5 @@ document.getElementsByName('type').forEach((item) => { item.onchange = updateTyp
 document.getElementById('file').onchange = getImage;
 document.getElementsByName('slider').forEach((item) => { item.oninput = updateTextAreas; });
 document.getElementsByName('text_area').forEach((item) => { item.oninput = updateSliders; });
+
+document.getElementById('hash').innerHTML = 'Last git commit hash: ' + hash;

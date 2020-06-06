@@ -4,7 +4,7 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "build": "webpack --config webpack.config.js",
+    "build": "git log --pretty=format:%H -n 1 > hash.txt && webpack --config webpack.config.js",
     "serv": "webpack-dev-server"
   },
   "author": "AD1",
