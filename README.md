@@ -1,2 +1,2 @@
 # Fractals
-Fractal manager task sources
+Fractal manager sources
